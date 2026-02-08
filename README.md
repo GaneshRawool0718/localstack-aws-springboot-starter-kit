@@ -32,6 +32,7 @@ LocalStack-POC/
 ├── Dockerfile                     # Multi-stage build (Maven build → JRE runtime)
 ├── docker-compose.yml             # Orchestrates LocalStack + Spring Boot app
 ├── init-aws.sh                    # Creates AWS resources when LocalStack starts
+├── setup-check.sh                 # Verifies required tools are installed
 ├── diagram.drawio                 # Architecture diagram (editable — open with draw.io)
 ├── diagram.png                    # Architecture diagram (exported image)
 ├── .env                           # Environment variables (git-ignored)
@@ -92,6 +93,14 @@ No Java code changes. Just environment variables.
 
 - Docker and Docker Compose installed
 - (Optional) AWS CLI for direct LocalStack inspection
+
+### Verify Prerequisites
+
+```bash
+bash setup-check.sh
+```
+
+This checks for Docker, Docker Compose, Java, Maven, AWS CLI, and Postman — and creates `.env` from `.env.example` if missing.
 
 ### Start Everything
 
