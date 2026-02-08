@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: localstack-poc
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# ---------------------------------------------------------------------------
+# AWS Configuration
+# All values are driven by environment variables with sensible defaults.
+# To switch from LocalStack to real AWS:
+#   - Remove or clear AWS_ENDPOINT_URL
+#   - Set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY to real IAM credentials
+#   - Ensure AWS resources (bucket, queue, table, topic) exist in the target region
+# ---------------------------------------------------------------------------
+aws:
+  region: ${AWS_REGION:us-east-1}
+  endpoint-url: ${AWS_ENDPOINT_URL:}
+  access-key: ${AWS_ACCESS_KEY_ID:test}
+  secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+
+  # Resource names (must match what the init script creates in LocalStack)
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:poc-bucket}
+  sqs:
+    queue-name: ${SQS_QUEUE_NAME:poc-queue}
+  dynamodb:
+    table-name: ${DYNAMODB_TABLE_NAME:poc-table}
+  sns:
+    topic-name: ${SNS_TOPIC_NAME:poc-topic}
+
+# Actuator health endpoint exposed for Docker health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
