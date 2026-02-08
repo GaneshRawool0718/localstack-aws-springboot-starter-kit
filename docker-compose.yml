@@ -1,0 +1,61 @@
+services:
+  # ---------------------------------------------------------------------------
+  # LocalStack — simulates AWS services locally
+  # ---------------------------------------------------------------------------
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: localstack
+    ports:
+      - "4566:4566"             # Unified gateway for all AWS services
+      - "4510-4559:4510-4559"   # External service port range
+    environment:
+      - SERVICES=s3,sqs,dynamodb,sns
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      # Init script runs automatically when LocalStack is ready
+      - "./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "localstack-data:/var/lib/localstack"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - localstack-net
+
+  # ---------------------------------------------------------------------------
+  # Spring Boot Application — uses AWS SDK to interact with LocalStack
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: localstack-poc-app
+    ports:
+      - "8081:8080"
+    environment:
+      # Point AWS SDK to LocalStack (uses Docker network hostname, not localhost)
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      # Resource names (must match init-aws.sh)
+      - S3_BUCKET_NAME=poc-bucket
+      - SQS_QUEUE_NAME=poc-queue
+      - DYNAMODB_TABLE_NAME=poc-table
+      - SNS_TOPIC_NAME=poc-topic
+    depends_on:
+      localstack:
+        condition: service_healthy  # Wait for LocalStack to be ready (and init script to complete)
+    networks:
+      - localstack-net
+
+volumes:
+  localstack-data:
+
+networks:
+  localstack-net:
+    driver: bridge
